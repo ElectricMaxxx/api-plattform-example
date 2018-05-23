@@ -1,0 +1,45 @@
+version: '3'
+services:
+  web:
+    build: ./docker/web/
+    container_name: example-nginx
+    volumes:
+      - ./logs/nginx/:/var/log/nginx
+      - ./symfony:/mnt/code:rw
+    networks:
+      - net3
+    ports:
+      - 9093:80
+  php:
+      build:
+          context:  ./docker/php
+          args:
+            TIMEZONE: 'Europe/Berlin'
+      container_name: example-php
+      networks:
+        - net3
+      depends_on:
+        - mysql
+      volumes:
+        - ./symfony:/mnt/code:rw
+        - ./tmp/:/tmp:rw
+      tty: true
+  mysql:
+    image: mysql:latest
+    container_name: example-mysql
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      MYSQL_USER: vagrant
+      MYSQL_PASSWORD: vagrant
+      MYSQL_DATABASE: example_symfony
+    networks:
+      - net3
+networks:
+  net3:
+    driver: bridge
+    driver_opts:
+      com.docker.network.enable_ipv6: "true"
+    ipam:
+      driver: default
+      config:
+        - subnet: 192.168.20.0/24
